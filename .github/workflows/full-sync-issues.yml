@@ -1,0 +1,36 @@
+name: Perform full sync for issues and project board
+
+on: [issues, push, workflow_dispatch, workflow_call]
+concurrency:
+  group: issue-full-sync
+
+permissions:
+  issues: write
+  repository-projects: read
+  pull-requests: read
+
+jobs:
+  full-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this project
+        uses: actions/checkout@v4
+      - name: Clone OdysseyDecomp
+        uses: actions/checkout@v4
+        with:
+          repository: MonsterDruide1/OdysseyDecomp
+          path: ./OdysseyDecomp
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Set up python package dependencies
+        run: pip install cxxfilt rapidyaml pygithub
+      - name: Run script for full sync
+        env:
+          FINE_TOKEN: ${{ secrets.FINE_TOKEN }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          cd OdysseyDecomp
+          python -u ../.github/scripts/ProgressManager.py
