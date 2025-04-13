@@ -76,7 +76,7 @@ class File:
     
     def issue_body(self):
         return f"""\
-The following functions should be listed in this class:
+The following functions should be listed in this object:
 | status | address | function | size (bytes) |
 | :----: | :------ | :------- | :----------- |
 {"\n".join([f.get_issue_line() for f in self.functions])}
