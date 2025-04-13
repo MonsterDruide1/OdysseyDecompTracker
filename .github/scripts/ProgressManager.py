@@ -106,6 +106,15 @@ The following functions should be listed in this class:
         else:
             return "insane"
 
+def truncate(text, length, appendix):
+    appendix_length = len(appendix)
+    if len(text) + appendix_length > length:
+        text = text[:(length - appendix_length)]
+        # delete until last newline
+        text = text[:text.rfind("\n")]
+        text += "\n... (truncated)"
+    return text + appendix
+
 print("Loading function CSV...")
 # offset: (status, size, name)
 function_csv = {}
@@ -224,13 +233,7 @@ for issue in repo.get_issues(state="open"):
         if len(target_metadata) > 0:
             metadata = "\n\n---\n<!--START OF METADATA-->\n" + "\n".join(target_metadata) + "\n"
 
-        metadata_length = len(metadata)
-        if len(target_body) + metadata_length > 65536:
-            target_body = target_body[:(65500 - metadata_length)]
-            # delete until last newline
-            target_body = target_body[:target_body.rfind("\n")]
-            target_body += "\n... (truncated)"
-        target_body += metadata
+        target_body = truncate(target_body, 65500, metadata)
 
         if issue.body != target_body:
             print(f"Updating issue: {issue.title}")
@@ -286,7 +289,7 @@ for file_name, file in file_list.items():
     if not DRY_RUN:
         issue = repo.create_issue(
             title=f"Implement {file_name}",
-            body=file.issue_body(),
+            body=truncate(file.issue_body(), 65500, ""),
             labels=[label_implement]
         )
 
