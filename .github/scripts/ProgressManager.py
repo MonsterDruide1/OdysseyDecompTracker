@@ -141,9 +141,9 @@ with open('data/file_list.yml', 'r') as f:
 
             offset = int(tree.key(function_nested_id).tobytes().decode(), 16)
             function = tree.val(function_nested_id).tobytes().decode()
-            lazy = function.startswith("LAZY ")
-            if lazy:
-                function = function[5:]
+            lazy = "LAZY" in function
+            if " " in function:
+                function = function.split(" ")[-1]
             status, size, name = function_csv[offset]
             functions.append(Function(offset, status, size, name, lazy))
         file_list[filename] = File(functions)
