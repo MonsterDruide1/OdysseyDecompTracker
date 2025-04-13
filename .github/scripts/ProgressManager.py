@@ -334,6 +334,12 @@ def get_project_items(project_id):
                                     assignees {
                                         totalCount
                                     }
+                                    repository {
+                                        name
+                                        owner {
+                                            login
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -410,6 +416,8 @@ for item in project_items:
     status = item['status']['name'] if item['status'] is not None else "None"
     if status == "Done":
         continue  # ignore done items
+    if item['content']['repository']['name'] != REPO or item['content']['repository']['owner']['login'] != OWNER:
+        continue  # ignore items from other repos
 
     title = item['title']['text']
     if title.startswith("Implement "):
