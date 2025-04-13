@@ -31,7 +31,7 @@ jobs:
               console.log(`Deleted comment ID ${commentId}`);
             }
 
-            if (comment.startsWith("/unhelp") || comment.startsWith("/thanks")) {
+            if (comment.startsWith("/help")) {
               await github.rest.issues.addLabels({
                 ...context.repo,
                 issue_number: issueNumber,
@@ -39,7 +39,7 @@ jobs:
               });
               console.log(`Added 'help needed' label to issue #${issueNumber}`);
               await deleteComment();
-            } else if (comment.startsWith("/unhelp")) {
+            } else if (comment.startsWith("/unhelp") || comment.startsWith("/thanks")) {
               try {
                 await github.rest.issues.removeLabel({
                   ...context.repo,
