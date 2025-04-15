@@ -108,7 +108,7 @@ The following functions should be listed in this object:
             return "insane"
         
     def project(self):
-        if self.name.startswith("Project/") or self.name.startswith("Library/"):
+        if self.name.startswith("Project/") or self.name.startswith("Library/") or self.name.startswith("Unknown/"):
             return "al"
         elif self.name.startswith("agl/"):
             return "agl"
