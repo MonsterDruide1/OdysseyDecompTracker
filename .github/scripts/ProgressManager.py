@@ -108,15 +108,15 @@ The following functions should be listed in this object:
             return "insane"
         
     def project(self):
-        if self.filename.startswith("Project/") or self.filename.startswith("Library/"):
+        if self.name.startswith("Project/") or self.name.startswith("Library/"):
             return "al"
-        elif self.filename.startswith("agl/"):
+        elif self.name.startswith("agl/"):
             return "agl"
-        elif self.filename.startswith("sead"):
+        elif self.name.startswith("sead"):
             return "sead"
-        elif self.filename.startswith("nn/"):
+        elif self.name.startswith("nn/"):
             return "nn"
-        elif self.filename.startswith("eui/"):
+        elif self.name.startswith("eui/"):
             return "eui"
         else:
             return "game"
