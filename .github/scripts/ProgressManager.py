@@ -68,7 +68,8 @@ class Function:
 
 class File:
     # functions: dict[offset: int, tuple[status: FunctionStatus, size: int, mangled: str]]
-    def __init__(self, functions: list[Function]):
+    def __init__(self, name: str, functions: list[Function]):
+        self.name = name
         self.functions = functions
     
     def is_implemented(self):
@@ -105,6 +106,21 @@ The following functions should be listed in this object:
             return "harder"
         else:
             return "insane"
+        
+    def project(self):
+        if filename.startswith("Project/") or filename.startswith("Library/"):
+            return "al"
+        elif filename.startswith("agl/"):
+            return "agl"
+        elif filename.startswith("sead"):
+            return "sead"
+        elif filename.startswith("nn/"):
+            return "nn"
+        elif filename.startswith("eui/"):
+            return "eui"
+        else:
+            return "game"
+
 
 def truncate(text, length, appendix):
     appendix_length = len(appendix)
@@ -146,7 +162,7 @@ with open('data/file_list.yml', 'r') as f:
                 function = function.split(" ")[-1]
             status, size, name = function_csv[offset]
             functions.append(Function(offset, status, size, name, lazy))
-        file_list[filename] = File(functions)
+        file_list[filename] = File(filename, functions)
 
 # Limit to first 8 files for testing
 #file_list = {k: file_list[k] for k in list(file_list)[:20]}
@@ -268,6 +284,15 @@ for issue in repo.get_issues(state="open"):
                     issue.add_to_labels("good first issue")
                 else:
                     issue.remove_from_labels("good first issue")
+
+        target_project = "project:"+file_list[file_name].project()
+        current_projects = [lab.name for lab in issue.labels if lab.name.startswith("project:")]
+        if target_project not in current_projects or len(current_projects) > 1:
+            print(f"Updating issue project: {issue.title} -> {target_project}")
+            if not DRY_RUN:
+                for lab in current_projects:
+                    issue.remove_from_labels(lab)
+                issue.add_to_labels(target_project)
 
 
         # issue is up to date!
