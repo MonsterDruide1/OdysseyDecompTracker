@@ -37,3 +37,4 @@ Command    | Alias     | Effect
     - as GitHub application, authenticate as user, then create new branch based on existing one, delete original, then "create linked branch" to the old name, finally delete temporary branch
 - labels for "parts" of the game (at least separating al from rs)
 - auto-claim and link PRs being created on `OdysseyDecomp`
+- do not mark issues auto-closed due to the file being deleted as "Done", but remove them from the project board instead
