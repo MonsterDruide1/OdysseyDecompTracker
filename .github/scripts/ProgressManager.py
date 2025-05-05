@@ -195,7 +195,6 @@ for issue in repo.get_issues(state="open"):
             if not DRY_RUN:
                 issue.create_comment(body="File has been implemented.")
                 issue.edit(state="closed")
-            continue
 
         target_body = file_list[file_name].issue_body()
         current_body = issue.body
