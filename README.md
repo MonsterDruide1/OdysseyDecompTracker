@@ -31,10 +31,8 @@ Command    | Alias     | Effect
 /unrequest |           | Remove https://github.com/MonsterDruide1/OdysseyDecompTracker/labels/requested label
 
 ## Future Ideas
-- trigger full sync when new commit on OdysseyDecomp:master is detected
-    - https://www.reddit.com/r/github/comments/1dikiqw/is_it_possible_to_trigger_actions_in_another_repo/
 - add command to allow linking WIP branch that shows up in issue body, not only in comment below
     - as GitHub application, authenticate as user, then create new branch based on existing one, delete original, then "create linked branch" to the old name, finally delete temporary branch
 - labels for "parts" of the game (at least separating al from rs)
 - auto-claim and link PRs being created on `OdysseyDecomp`
-- do not mark issues auto-closed due to the file being deleted as "Done", but remove them from the project board instead
+- do not mark issues auto-closed due to the file being deleted as "Done", but fully remove them from the project board instead
