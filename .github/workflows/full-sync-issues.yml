@@ -26,7 +26,7 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
       - name: Set up python package dependencies
-        run: pip install cxxfilt rapidyaml pygithub
+        run: pip install cxxfilt pygithub
       - name: Run script for full sync
         env:
           FINE_TOKEN: ${{ secrets.FINE_TOKEN }}

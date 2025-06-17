@@ -1,10 +1,9 @@
 from github import Github, Auth
 from enum import Enum
-import ryml
 import cxxfilt
 import os, requests
 
-DRY_RUN = True
+DRY_RUN = False
 OWNER = "MonsterDruide1"
 REPO = "OdysseyDecompTracker"
 FINE_TOKEN = os.getenv("FINE_TOKEN")
@@ -26,22 +25,6 @@ class FunctionStatus(Enum):
     Wip = 4
     Library = 5
 
-def char_to_status(char: str) -> FunctionStatus:
-    if char == 'O':
-        return FunctionStatus.Matching
-    elif char == 'm':
-        return FunctionStatus.NonMatchingMinor
-    elif char == 'M':
-        return FunctionStatus.NonMatchingMajor
-    elif char == 'U':
-        return FunctionStatus.NotDecompiled
-    elif char == 'W':
-        return FunctionStatus.Wip
-    elif char == 'L':
-        return FunctionStatus.Library
-    else:
-        raise ValueError(f"Unknown status character: {char}")
-
 class Function:
     def __init__(self, offset: int, status: FunctionStatus, size: int, name: str, lazy: bool):
         self.offset = offset
@@ -56,6 +39,8 @@ class Function:
             if name.endswith("_0"):
                 name = name[:-2]
             demangled_name = cxxfilt.demangle(name)
+            if demangled_name == "''":
+                demangled_name = ""
             if demangled_name != "":
                 demangled_name = "`" + demangled_name + "`"
         except Exception as e:
@@ -63,7 +48,7 @@ class Function:
             demangled_name = self.name + " (demangle failed)"
         return f"| " +\
                f"{'⬜' if self.status == FunctionStatus.NotDecompiled else '✅'}" +\
-               f" | `0x{self.offset:08X}` | {demangled_name}{' (lazy)' if self.lazy else ''} | {self.size}" +\
+               f" | `0x71{self.offset:08X}` | {demangled_name}{' (lazy)' if self.lazy else ''} | {self.size}" +\
                f" |"
 
 class File:
@@ -71,24 +56,25 @@ class File:
     def __init__(self, name: str, functions: list[Function]):
         self.name = name
         self.functions = functions
-    
+
     def is_implemented(self):
         return all(f.status != FunctionStatus.NotDecompiled for f in self.functions)
-    
+
     def issue_body(self):
+        issue_lines = "\n".join([f.get_issue_line() for f in self.functions]);
         return f"""\
 The following functions should be listed in this object:
 | status | address | function | size (bytes) |
 | :----: | :------ | :------- | :----------- |
-{"\n".join([f.get_issue_line() for f in self.functions])}
+{issue_lines}
         """
-    
+
     def get_total_size(self):
         return sum(f.size for f in self.functions)
-    
+
     def get_total_functions(self):
         return len(self.functions)
-    
+
     def difficulty(self):
         # 0    < X < 500  : Easy (blue - 0-20%)
         # 500  < X < 1500 : Normal (green - 20-50 = 30%)
@@ -106,7 +92,7 @@ The following functions should be listed in this object:
             return "harder"
         else:
             return "insane"
-        
+
     def project(self):
         if self.name.startswith("Project/") or self.name.startswith("Library/") or self.name.startswith("Unknown/"):
             return "al"
@@ -131,38 +117,45 @@ def truncate(text, length, appendix):
         text += "\n... (truncated)"
     return text + appendix
 
-print("Loading function CSV...")
-# offset: (status, size, name)
-function_csv = {}
-with open('data/odyssey_functions.csv', 'r') as f:
-    lines = f.readlines()[1:]
-    for line in lines:
-        offset, status, size, name = line.strip().split(',')
-        function_csv[int(offset, 16)] = (char_to_status(status), int(size), name)
+def parse_file_list(file_list_lines: list[str]) -> dict[str, File]:
+    files = {}
+    current_object_name = ""
+    current_functions = []
+    current_offset = 0
+    current_size = 0
+    current_label = ""
+    for i, line in enumerate(file_list_lines):
+        line = line.strip()
+        if line.endswith(".o:") or line.endswith("UNKNOWN:"):
+            if len(current_functions) > 0:
+                files[current_object_name] = File(current_object_name, current_functions)
+                current_functions = []
+            current_object_name = line.strip(":")
+        if "offset:" in line:
+            current_offset = int(line.split(" ")[-1], 16)
+        if "size:" in line:
+            current_size = int(line.split(" ")[-1])
+        elif "label:" in line:
+            # Get first element if label is a string array
+            if "-" in file_list_lines[i + 1]:
+                current_label = file_list_lines[i + 1].split(" ")[-1].strip()
+            else:
+                current_label = line.split(" ")[-1]
+        elif "status:" in line:
+            status_str = line.split(" ")[-1]
+            status = FunctionStatus[status_str]
+            lazy = "lazy: true" in file_list_lines[i + 1]
+            current_functions.append(Function(current_offset, status, current_size, current_label, lazy))
+
+    if len(current_functions) > 0:
+        files[current_object_name] = File(current_object_name, current_functions)
+        current_functions = []
+    return files
 
 print("Loading file list...")
 file_list = {}
 with open('data/file_list.yml', 'r') as f:
-    tree = ryml.parse_in_arena(bytes(f.read(), 'utf-8'))
-    for file_id in ryml.children(tree, tree.root_id()):
-        filename = tree.key(file_id).tobytes().decode()
-        functions_data = tree.find_child(file_id, b".text")
-
-        functions = []
-        for function_id in ryml.children(tree, functions_data):
-            # each line is another list itself
-            if tree.num_children(function_id) != 1:
-                raise ValueError(f"Unexpected number of children in file {filename}: {tree.num_children(function_id)}")
-            function_nested_id = next(iter(ryml.children(tree, function_id)))
-
-            offset = int(tree.key(function_nested_id).tobytes().decode(), 16)
-            function = tree.val(function_nested_id).tobytes().decode()
-            lazy = "LAZY" in function
-            if " " in function:
-                function = function.split(" ")[-1]
-            status, size, name = function_csv[offset]
-            functions.append(Function(offset, status, size, name, lazy))
-        file_list[filename] = File(filename, functions)
+    file_list = parse_file_list(list(f))
 
 # Limit to first 8 files for testing
 #file_list = {k: file_list[k] for k in list(file_list)[:20]}
@@ -252,6 +245,8 @@ for issue in repo.get_issues(state="open"):
 
         if issue.body != target_body:
             print(f"Updating issue: {issue.title}")
+            print(f"Current body: {current_body}")
+            print(f"Target body: {target_body}")
             if not DRY_RUN:
                 issue.edit(body=target_body)
         
