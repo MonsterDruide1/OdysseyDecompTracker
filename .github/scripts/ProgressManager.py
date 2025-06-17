@@ -3,7 +3,7 @@ from enum import Enum
 import cxxfilt
 import os, requests
 
-DRY_RUN = True
+DRY_RUN = False
 OWNER = "MonsterDruide1"
 REPO = "OdysseyDecompTracker"
 FINE_TOKEN = os.getenv("FINE_TOKEN")
