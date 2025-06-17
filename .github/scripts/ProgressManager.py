@@ -4,7 +4,7 @@ import ryml
 import cxxfilt
 import os, requests
 
-DRY_RUN = False
+DRY_RUN = True
 OWNER = "MonsterDruide1"
 REPO = "OdysseyDecompTracker"
 FINE_TOKEN = os.getenv("FINE_TOKEN")
