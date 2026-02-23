@@ -170,7 +170,7 @@ label_implement = repo.get_label("implement")
 print("Iterating and adjusting issues...")
 files_handled = set()
 open_issues = repo.get_issues(state="open")
-if len(open_issues) == 0:
+if open_issues.totalCount == 0:
     print("No open issues found - assuming failure of API call, aborting")
     exit(1)
 for issue in open_issues:
@@ -479,7 +479,7 @@ for item in project_items:
     print(f"Unknown item: {item.title}")
 
 open_issues = repo.get_issues(state="open")
-if len(open_issues) == 0:
+if open_issues.totalCount == 0:
     print("No open issues found - assuming failure of API call, aborting")
     exit(1)
 for issue in open_issues:
