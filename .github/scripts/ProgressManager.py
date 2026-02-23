@@ -169,11 +169,7 @@ label_implement = repo.get_label("implement")
 
 print("Iterating and adjusting issues...")
 files_handled = set()
-open_issues = repo.get_issues(state="open")
-if open_issues.totalCount == 0:
-    print("No open issues found - assuming failure of API call, aborting")
-    exit(1)
-for issue in open_issues:
+for issue in repo.get_issues(state="open"):
     if label_unmanaged in issue.labels:
         continue
 
@@ -301,6 +297,11 @@ for issue in open_issues:
     print(f"Unknown issue: {issue.title}")
     if not DRY_RUN:
         issue.add_to_labels(label_unmanaged)
+
+if len(files_handled) == 0:
+    # on first run, disable this check
+    print("GitHub API probably returned no issues. Aborting.")
+    exit(1)
 
 print("Checking for missing issues...")
 for file_name, file in file_list.items():
@@ -433,9 +434,6 @@ def set_project_item_status(project_id, item_id, status_id, status_value_id):
 # get project items
 
 project_items = get_project_items(PROJECT_ID)
-if len(project_items) == 0:
-    print("No project items found - assuming failure of API call, aborting")
-    exit(1)
 
 issues_handled = set()
 for item in project_items:
@@ -478,11 +476,7 @@ for item in project_items:
     # unknown item
     print(f"Unknown item: {item.title}")
 
-open_issues = repo.get_issues(state="open")
-if open_issues.totalCount == 0:
-    print("No open issues found - assuming failure of API call, aborting")
-    exit(1)
-for issue in open_issues:
+for issue in repo.get_issues(state="open"):
     if label_unmanaged in issue.labels:
         continue
     if issue.number in issues_handled:
