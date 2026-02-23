@@ -169,7 +169,11 @@ label_implement = repo.get_label("implement")
 
 print("Iterating and adjusting issues...")
 files_handled = set()
-for issue in repo.get_issues(state="open"):
+open_issues = repo.get_issues(state="open")
+if len(open_issues) == 0:
+    print("No open issues found - assuming failure of API call, aborting")
+    exit(1)
+for issue in open_issues:
     if label_unmanaged in issue.labels:
         continue
 
@@ -429,6 +433,9 @@ def set_project_item_status(project_id, item_id, status_id, status_value_id):
 # get project items
 
 project_items = get_project_items(PROJECT_ID)
+if len(project_items) == 0:
+    print("No project items found - assuming failure of API call, aborting")
+    exit(1)
 
 issues_handled = set()
 for item in project_items:
@@ -471,7 +478,11 @@ for item in project_items:
     # unknown item
     print(f"Unknown item: {item.title}")
 
-for issue in repo.get_issues(state="open"):
+open_issues = repo.get_issues(state="open")
+if len(open_issues) == 0:
+    print("No open issues found - assuming failure of API call, aborting")
+    exit(1)
+for issue in open_issues:
     if label_unmanaged in issue.labels:
         continue
     if issue.number in issues_handled:
