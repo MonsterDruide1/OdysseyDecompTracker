@@ -298,7 +298,9 @@ for issue in repo.get_issues(state="open"):
     if not DRY_RUN:
         issue.add_to_labels(label_unmanaged)
 
-if len(files_handled) == 0:
+# on first run or large changes in the file, disable this check
+# when GitHub has issues, we cannot even rely in no data being sent
+if len(files_handled) < len(file_list) - 100:
     # on first run, disable this check
     print("GitHub API probably returned no issues. Aborting.")
     exit(1)
