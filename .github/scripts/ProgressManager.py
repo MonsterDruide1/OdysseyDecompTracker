@@ -298,19 +298,18 @@ for issue in repo.get_issues(state="open"):
     if not DRY_RUN:
         issue.add_to_labels(label_unmanaged)
 
+print("Checking for missing issues...")
+issues_to_create = {
+    file_name: file for file_name, file in file_list.items() if not file.is_implemented() and file_name not in files_handled
+}
+
 # on first run or large changes in the file, disable this check
 # when GitHub has issues, we cannot even rely in no data being sent
-if len(files_handled) < len(file_list) - 100:
-    # on first run, disable this check
+if len(issues_to_create) > 100:
     print("GitHub API probably returned no issues. Aborting.")
     exit(1)
 
-print("Checking for missing issues...")
-for file_name, file in file_list.items():
-    if file_name in files_handled:
-        continue
-    if file.is_implemented():
-        continue
+for file_name, file in issues_to_create.items():
     print(f"Creating issue: Implement {file_name}")
     if not DRY_RUN:
         issue = repo.create_issue(
