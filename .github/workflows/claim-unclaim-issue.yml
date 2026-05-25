@@ -1,4 +1,4 @@
-name: Assign or unassign "help needed" on comments
+name: Assign or unassign users on comments (claim/unclaim)
 
 on:
   issue_comment:
@@ -10,7 +10,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  help_unhelp:
+  claim_unclaim:
     runs-on: ubuntu-latest
     if: github.event.issue.pull_request == null
     steps:
