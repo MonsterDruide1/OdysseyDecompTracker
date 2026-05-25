@@ -1,0 +1,61 @@
+name: Assign or unassign "help needed" on comments
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  repository-projects: read
+  pull-requests: read
+
+jobs:
+  help_unhelp:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request == null
+    steps:
+      - name: Check comment and label accordingly
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = context.payload.comment.body.trim().toLowerCase();
+            const commentId = context.payload.comment.id;
+            const issueNumber = context.payload.issue.number;
+            const user = context.payload.comment.user.login;
+            const assignees = context.payload.issue.assignees;
+
+            async function deleteComment() {
+              await github.rest.issues.deleteComment({
+                ...context.repo,
+                comment_id: commentId
+              });
+              console.log(`Deleted comment ID ${commentId}`);
+            }
+
+            if (comment.startsWith("/claim") || comment.startsWith("/assign")) {
+              await github.rest.issues.addAssignees({
+                ...context.repo,
+                issue_number: issueNumber,
+                assignees: [user]
+              });
+              console.log(`Added user ${user} to issue #${issueNumber}`);
+              await deleteComment();
+
+              if (assignees.length > 0) {
+                const mentions = assignees.map(user => `@${user.login}`).join(' ');
+                const comment = `${mentions} @${user} Warning: This issue is now assigned to more than one person! Please make sure you're not working on the same functions.`;
+                await github.rest.issues.createComment({
+                  ...context.repo,
+                  issue_number: issueNumber,
+                  body: comment
+                });
+              }
+            } else if (comment.startsWith("/unclaim") || comment.startsWith("/unassign")) {
+              await github.rest.issues.removeAssignees({
+                ...context.repo,
+                issue_number: issueNumber,
+                assignees: [user]
+              });
+              console.log(`Removed user ${user} from issue #${issueNumber}`);
+              await deleteComment();
+            }
