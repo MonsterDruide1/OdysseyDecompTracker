@@ -305,9 +305,9 @@ issues_to_create = {
 
 # on first run or large changes in the file, disable this check
 # when GitHub has issues, we cannot even rely in no data being sent
-#if len(issues_to_create) > 100:
-#    print("GitHub API probably returned no issues. Aborting.")
-#    exit(1)
+if len(issues_to_create) > 100:
+    print("GitHub API probably returned no issues. Aborting.")
+    exit(1)
 
 for file_name, file in issues_to_create.items():
     print(f"Creating issue: Implement {file_name}")
